@@ -3,41 +3,24 @@ import os
 
 DATABASE_FILE = "users.json"
 
-
-
-def initialize_database():
-    """
-    Creates users.json if it does not exist.
-    """
-
-    if not os.path.exists(DATABASE_FILE):
-
-        data = {
-            "users": []
-        }
-
-        with open(DATABASE_FILE, "w") as file:
-            json.dump(data, file, indent=4)
-
-
 def load_users():
     with open(DATABASE_FILE, "r") as file:
         return json.load(file)
 
 
 def save_users(data):
-    """
-    Saves updated data to users.json.
-    """
+    
+    #Saves updated data to users.json.
+    
 
     with open(DATABASE_FILE, "w") as file:
         json.dump(data, file, indent=4)
 
 
 def username_exists(username):
-    """
-    Checks if a username already exists.
-    """
+    
+    # Checks if a username already exists.
+    
 
     data = load_users()
 
@@ -50,9 +33,9 @@ def username_exists(username):
 
 
 def register_user(fullname, username, password, role):
-    """
-    Creates a new account.
-    """
+   
+    # Creates a new account.
+    
 
     if username_exists(username):
         return False
@@ -74,9 +57,9 @@ def register_user(fullname, username, password, role):
 
 
 def login_user(username, password):
-    """
-    Verifies login credentials.
-    """
+   
+    # Verifies login credentials.
+    
 
     data = load_users()
 
@@ -92,9 +75,9 @@ def login_user(username, password):
 
 
 def get_user(username):
-    """
-    Returns a user record.
-    """
+    
+    #Returns a user record.
+    
 
     data = load_users()
 
