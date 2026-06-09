@@ -1,0 +1,10 @@
+{
+    "users": [
+        {
+            "fullname": "Juan Dela Cruz",
+            "username": "juan123",
+            "password": "abc123",
+            "role": "Student"
+        }
+    ]
+}
