@@ -1,4 +1,6 @@
 from tkinter import *
+from tkinter import filedialog, Toplevel, messagebox
+import course 
 
 # WINDOW
 root = Tk()
@@ -136,27 +138,232 @@ content_frame.pack(
     expand=True
 )
 
-from tkinter import filedialog, Toplevel
+# MANAGE COURSES POPUP
+def open_manage_courses():
 
-# DASHBOARD PAGE
-def show_dashboard():
+    popup = Toplevel()
+    popup.title("Manage Courses")
+    popup.geometry("650x700")
+    popup.configure(bg="white")
 
-    clear_content()
+    Label(
+        popup,
+        text="Manage Courses",
+        font=("Poppins", 18, "bold"),
+        bg="white"
+    ).pack(pady=15)
 
-    cards_frame = Frame(
-        content_frame,
-        bg="#f4e8e8"
+    # TOP ACTION BUTTONS
+    action_frame = Frame(
+        popup,
+        bg="white"
+    )
+    action_frame.pack(fill="x", padx=20)
+
+    # COURSE NAME
+    Label(
+        popup,
+        text="Course Name",
+        bg="white",
+        font=("Poppins", 10)
+    ).pack(anchor="w", padx=20, pady=(20, 5))
+
+    ent_name = Entry(
+        popup,
+        font=("Poppins", 11)
+    )
+    ent_name.pack(
+        fill="x",
+        padx=20,
+        ipady=8
     )
 
-    cards_frame.pack(
-        fill="x",
-        pady=(20, 20),
+    # COURSE DESCRIPTION
+    Label(
+        popup,
+        text="Course Description",
+        bg="white",
+        font=("Poppins", 10)
+    ).pack(anchor="w", padx=20, pady=(15, 5))
+
+    ent_desc = Text(
+        popup,
+        height=8,
+        font=("Poppins", 11)
+    )
+    ent_desc.pack(
+        fill="both",
+        expand=True,
         padx=20
     )
 
-    # DASHBOARD CARD
-def show_dashboard():
+    file_data = {"path": None}
 
+    def upload_pdf():
+        path = filedialog.askopenfilename(
+            filetypes=[("PDF files", "*.pdf")]
+        )
+
+        if path:
+            file_data["path"] = path
+            upload_label.config(
+                text=path.split("/")[-1]
+            )
+
+    Label(
+        popup,
+        text="Course Material (PDF)",
+        bg="white",
+        font=("Poppins", 10)
+    ).pack(anchor="w", padx=20, pady=(15, 5))
+
+    Button(
+        popup,
+        text="Click to Upload PDF",
+        command=upload_pdf
+    ).pack(pady=5)
+
+    upload_label = Label(
+        popup,
+        text="No file selected",
+        fg="gray",
+        bg="white"
+    )
+    upload_label.pack()
+
+    def save_course():
+        name = ent_name.get().strip()
+        desc = ent_desc.get("1.0", END).strip()
+
+        try:
+            course.create_course(name, desc)
+            
+            messagebox.showinfo("Success", "Course successfully saved to database!", parent=popup)
+            popup.destroy()
+            
+            show_courses()
+            
+        except Exception as e:
+            messagebox.showerror("Error", str(e), parent=popup)
+        
+    # BOTTOM BUTTONS
+    button_frame = Frame(
+        popup,
+        bg="white"
+    )
+    button_frame.pack(
+        fill="x",
+        padx=20,
+        pady=20
+    )
+
+    Button(
+        button_frame,
+        text="Cancel",
+        command=popup.destroy,
+        bg="#d9d9d9",
+        relief="flat",
+        font=("Poppins", 10)
+    ).pack(
+        side="left",
+        ipadx=20,
+        ipady=10
+    )
+
+    Button(
+        button_frame,
+        text="SAVE COURSE",
+        bg="#7b1d2e",
+        fg="white",
+        relief="flat",
+        font=("Poppins", 10, "bold"),
+        command=save_course
+    ).pack(
+        side="left",
+        fill="x",
+        expand=True,
+        padx=(10, 0),
+        ipady=10
+    )
+
+def open_edit_course(course_item):
+
+    original_name = course_item["course_name"]
+
+    popup = Toplevel()
+    popup.title("Edit Course")
+    popup.geometry("650x700")
+    popup.configure(bg="white")
+
+    Label(
+        popup,
+        text="Edit Course",
+        font=("Poppins", 18, "bold"),
+        bg="white"
+    ).pack(pady=15)
+
+    Label(popup, text="Course Name", bg="white", font=("Poppins", 10)).pack(anchor="w", padx=20, pady=(20, 5))
+    ent_name = Entry(popup, font=("Poppins", 11))
+    ent_name.pack(fill="x", padx=20, ipady=8)
+    
+    ent_name.insert(0, original_name)  
+
+    Label(popup, text="Course Description", bg="white", font=("Poppins", 10)).pack(anchor="w", padx=20, pady=(15, 5))
+    ent_desc = Text(popup, height=8, font=("Poppins", 11))
+    ent_desc.pack(fill="both", expand=True, padx=20)
+    
+    ent_desc.insert("1.0", course_item["course_description"])
+
+    def save_changes():
+        new_name = ent_name.get().strip()
+        new_desc = ent_desc.get("1.0", END).strip()
+
+        if not new_name:
+            messagebox.showerror("Validation Error", "Course Name must not be left blank.", parent=popup)
+            return
+
+        try:
+            
+            all_courses = course.load_courses()
+            
+            if new_name != original_name:
+                for c in all_courses:
+                    if c["course_name"] == new_name:
+                        messagebox.showerror("Validation Error", f"Course: {new_name} already exists.", parent=popup)
+                        return
+
+            for c in all_courses:
+                if c["course_name"] == original_name:
+                    c["course_name"] = new_name          
+                    c["course_description"] = new_desc   
+            
+            course.save_courses(all_courses)
+            
+            messagebox.showinfo("Success", "Course changes successfully saved!", parent=popup)
+            popup.destroy()
+            
+            show_courses()
+            
+        except Exception as e:
+            messagebox.showerror("Database Error", f"An unexpected error occurred: {e}", parent=popup)
+
+    button_frame = Frame(popup, bg="white")
+    button_frame.pack(fill="x", padx=20, pady=20)
+
+    Button(
+        button_frame, text="Cancel", command=popup.destroy,
+        bg="#d9d9d9", relief="flat", font=("Poppins", 10)
+    ).pack(side="left", ipadx=20, ipady=10)
+
+    Button(
+        button_frame, 
+        text="SAVE CHANGES",
+        bg="#7b1d2e", fg="white", relief="flat",
+        font=("Poppins", 10, "bold"), command=save_changes
+    ).pack(side="left", fill="x", expand=True, padx=(10, 0), ipady=10)
+
+# DASHBOARD PAGE
+def show_dashboard():
     clear_content()
 
     cards_frame = Frame(
@@ -180,7 +387,7 @@ def show_dashboard():
             height=180
         )
 
-        card.pack(side="left", padx=10)
+        card.pack(side="left", padx=10, expand=True, fill="x")
         card.pack_propagate(False)
 
         Label(
@@ -206,11 +413,16 @@ def show_dashboard():
             bg=bg_color
         ).pack(anchor="w", padx=20, pady=(10, 0))
 
+    try:
+        total_courses = len(course.load_courses())
+    except Exception:
+        total_courses = 0
+
     dashboard_card(
         cards_frame,
         "📚",
         "Total Courses",
-        "6",
+        str(total_courses),
         "#f2e6cf"
     )
 
@@ -239,169 +451,6 @@ def show_dashboard():
 
     quick_frame.grid_columnconfigure(0, weight=1)
     quick_frame.grid_columnconfigure(1, weight=1)
-
-    # MANAGE COURSES POPUP
-    def open_manage_courses():
-
-        popup = Toplevel()
-        popup.title("Manage Courses")
-        popup.geometry("650x700")
-        popup.configure(bg="white")
-
-        Label(
-            popup,
-            text="Manage Courses",
-            font=("Poppins", 18, "bold"),
-            bg="white"
-        ).pack(pady=15)
-
-        # TOP ACTION BUTTONS
-        action_frame = Frame(
-            popup,
-            bg="white"
-        )
-        action_frame.pack(fill="x", padx=20)
-
-        Button(
-            action_frame,
-            text="➕ Add Course",
-            bg="#7b1d2e",
-            fg="white",
-            relief="flat",
-            font=("Poppins", 10, "bold")
-        ).pack(side="left", fill="x", expand=True, padx=5, ipady=8)
-
-        Button(
-            action_frame,
-            text="✏️ Edit Course",
-            bg="#d9d9d9",
-            relief="flat",
-            font=("Poppins", 10)
-        ).pack(side="left", fill="x", expand=True, padx=5, ipady=8)
-
-        Button(
-            action_frame,
-            text="🗑 Delete Course",
-            bg="#d9d9d9",
-            relief="flat",
-            font=("Poppins", 10)
-        ).pack(side="left", fill="x", expand=True, padx=5, ipady=8)
-
-        # COURSE NAME
-        Label(
-            popup,
-            text="Course Name",
-            bg="white",
-            font=("Poppins", 10)
-        ).pack(anchor="w", padx=20, pady=(20, 5))
-
-        course_name = Entry(
-            popup,
-            font=("Poppins", 11)
-        )
-        course_name.pack(
-            fill="x",
-            padx=20,
-            ipady=8
-        )
-
-        # COURSE DESCRIPTION
-        Label(
-            popup,
-            text="Course Description",
-            bg="white",
-            font=("Poppins", 10)
-        ).pack(anchor="w", padx=20, pady=(15, 5))
-
-        course_desc = Text(
-            popup,
-            height=8,
-            font=("Poppins", 11)
-        )
-        course_desc.pack(
-            fill="both",
-            expand=True,
-            padx=20
-        )
-
-        file_data = {"path": None}
-
-        def upload_pdf():
-            path = filedialog.askopenfilename(
-                filetypes=[("PDF files", "*.pdf")]
-            )
-
-            if path:
-                file_data["path"] = path
-                upload_label.config(
-                    text=path.split("/")[-1]
-                )
-
-        Label(
-            popup,
-            text="Course Material (PDF)",
-            bg="white",
-            font=("Poppins", 10)
-        ).pack(anchor="w", padx=20, pady=(15, 5))
-
-        Button(
-            popup,
-            text="Click to Upload PDF",
-            command=upload_pdf
-        ).pack(pady=5)
-
-        upload_label = Label(
-            popup,
-            text="No file selected",
-            fg="gray",
-            bg="white"
-        )
-        upload_label.pack()
-
-        def save_course():
-            print("Course Name:", course_name.get())
-            print("Description:", course_desc.get("1.0", END))
-            print("PDF:", file_data["path"])
-
-        # BOTTOM BUTTONS
-        button_frame = Frame(
-            popup,
-            bg="white"
-        )
-        button_frame.pack(
-            fill="x",
-            padx=20,
-            pady=20
-        )
-
-        Button(
-            button_frame,
-            text="Cancel",
-            command=popup.destroy,
-            bg="#d9d9d9",
-            relief="flat",
-            font=("Poppins", 10)
-        ).pack(
-            side="left",
-            ipadx=20,
-            ipady=10
-        )
-
-        Button(
-            button_frame,
-            text="SAVE COURSE",
-            bg="#7b1d2e",
-            fg="white",
-            relief="flat",
-            font=("Poppins", 10, "bold"),
-            command=save_course
-        ).pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=(10, 0),
-            ipady=10
-        )
 
     # MANAGING FILES POPUP
     def open_manage_files():
@@ -504,7 +553,7 @@ def show_dashboard():
         "📖",
         "Manage Courses",
         "Add, edit, or delete your courses",
-        command=open_manage_courses
+        command=show_courses
     )
 
     quick_card(
@@ -537,12 +586,9 @@ def show_dashboard():
         bg="white"
     ).pack(expand=True)
 
-# COURSES PAGE
-def create_course_card(
-        parent,
-        title,
-        description,
-):
+
+# CARD TEMPLATE CREATOR
+def create_course_card(parent, title, description, delete_btn, edit_btn):
 
     card = Frame(
         parent,
@@ -550,21 +596,17 @@ def create_course_card(
         height=140,
         bd=0
     )
-
     card.pack(
         fill="x",
         pady=10
     )
-
     card.pack_propagate(False)
 
     # TOP
-
     top = Frame(
         card,
         bg="white"
     )
-
     top.pack(
         fill="x",
         padx=25,
@@ -583,7 +625,6 @@ def create_course_card(
         top,
         bg="white"
     )
-
     actions.pack(side="right")
 
     Button(
@@ -594,7 +635,8 @@ def create_course_card(
         fg="#7b1d2e",
         relief="flat",
         width=3,
-        cursor="hand2"
+        cursor="hand2",
+        command=edit_btn
     ).pack(
         side="left",
         padx=5
@@ -608,44 +650,53 @@ def create_course_card(
         fg="#d9534f",
         relief="flat",
         width=3,
-        cursor="hand2"
+        cursor="hand2",
+        command=delete_btn
     ).pack(side="left")
 
     # DESCRIPTION
-
     Label(
         card,
         text=description,
         font=("Arial", 11),
         fg="gray",
-        bg="white"
+        bg="white",
+        wraplength=1200,
+        justify="left"
     ).pack(
         anchor="w",
         padx=25,
-        pady=(10, 0)
+        pady=(10, 0),
+        fill="x"
     )
 
-    # DETAILS
-    details = Frame(
-        card,
-        bg="white"
-    )
-
-    details.pack(
-        anchor="w",
-        padx=25,
-        pady=(18, 0)
-    )
-
+# COURSES MANAGEMENT VIEW
 def show_courses():
-
     clear_content()
 
+    def delete_course(course_name):
+        confirm = messagebox.askyesno(
+            "Delete Course",
+            f"Are you sure you want to delete '{course_name}'"
+        )
+
+        if confirm:
+            try:
+                all_courses = course.load_courses()
+                updated_course = [] 
+                for c in all_courses:
+                    if c['course_name'] != course_name:
+                        updated_course.append(c)
+                course.save_courses(updated_course)
+                messagebox.showinfo("Succes", f"'{course_name}' has been deleted.")
+                show_courses()
+            except Exception as e:
+                messagebox.showerror("Error", f"Couldn't delete course: {e}")   
+    
     main_content = Frame(
         content_frame,
         bg="#f4e8e8"
     )
-
     main_content.pack(
         fill="both",
         expand=True,
@@ -657,7 +708,6 @@ def show_courses():
         main_content,
         bg="#f4e8e8"
     )
-
     page_header.pack(
         fill="x",
         pady=(20, 20)
@@ -667,7 +717,6 @@ def show_courses():
         page_header,
         bg="#f4e8e8"
     )
-
     title_frame.pack(side="left")
 
     Label(
@@ -689,20 +738,29 @@ def show_courses():
         pady=(5, 0)
     )
 
-    create_course_card(
-        main_content,
-        "Object Oriented Programming",
-        "Learn the basics of HTML, CSS, JavaScript, and modern web development practices.",
-        
-    )
+    Button(
+        page_header,
+        text="➕ Add Course",
+        bg="#7b1d2e",
+        fg="white",
+        relief="flat",
+        font=("Poppins", 10, "bold"),
+        command=open_manage_courses
+    ).pack(side="right", fill="x", padx=5, ipady=8)
 
-    create_course_card(
-        main_content,
-        "Computer Hardware Fundamentals",
-        "Master the fundamentals of user interface and user experience design.",
-        
-    )
-
+    try:
+        all_courses = course.load_courses()
+        for course_item in all_courses:
+            create_course_card(
+                main_content,
+                course_item["course_name"],       
+                course_item["course_description"],
+                delete_btn=lambda name=course_item["course_name"]: delete_course(name),
+                edit_btn=lambda item=course_item: open_edit_course(item)
+            )
+    except Exception as e:
+        messagebox.showerror("Error", e)
+   
 # SIDEBAR BUTTONS
 menu_items = [
     ("🏠   Dashboard", show_dashboard),
@@ -730,18 +788,16 @@ for text, cmd in menu_items:
         padx=20
     )
 
-from tkinter import messagebox
-
 def logout():
-
     confirm = messagebox.askyesno(
         "Logout",
         "Are you sure you want to logout?"
     )
-
     if confirm:
-        root.destroy() 
-          # closes the application
+       root.destroy()
+       import homepage
+        
+
 
 Button(
     sidebar,
@@ -751,7 +807,7 @@ Button(
     bg="#7b1d2e",
     activebackground="#F5C842",
     relief="flat",
-    width=60,
+    width=60,   
     height=2,
     anchor="w",
     padx=30,
