@@ -593,14 +593,12 @@ def create_course_card(parent, title, description, delete_btn, edit_btn):
     card = Frame(
         parent,
         bg="white",
-        height=140,
         bd=0
     )
     card.pack(
         fill="x",
-        pady=10
+        pady=10,
     )
-    card.pack_propagate(False)
 
     # TOP
     top = Frame(
@@ -661,13 +659,13 @@ def create_course_card(parent, title, description, delete_btn, edit_btn):
         font=("Arial", 11),
         fg="gray",
         bg="white",
-        wraplength=1200,
-        justify="left"
+        wraplength=800,
+        justify="left",
+        anchor="w"
     ).pack(
-        anchor="w",
+        fill="x",
         padx=25,
-        pady=(10, 0),
-        fill="x"
+        pady=(5, 20),
     )
 
 # COURSES MANAGEMENT VIEW
