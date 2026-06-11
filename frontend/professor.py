@@ -1,11 +1,15 @@
+import os
 from tkinter import *
 from tkinter import filedialog, Toplevel, messagebox
-import course 
+from course_management import course as course
 
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+icon_path = os.path.join(BASE_DIR, "puplogo.ico")
 # WINDOW
 root = Tk()
 root.title("Learning Management System Dashboard")
-root.iconbitmap("puplogo.ico")
+root.iconbitmap(icon_path)
 root.state("zoomed")
 root.configure(bg="#f4e8e8")
 
