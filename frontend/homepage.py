@@ -1,5 +1,9 @@
+import os
 from tkinter import *
 from PIL import Image, ImageTk
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+icon_path = os.path.join(BASE_DIR, "puplogo.ico")
 
 def create_window():
     left_frame = Tk()
@@ -8,7 +12,7 @@ def create_window():
 # WINDOW 
 window = Tk()
 window.title("Learning Management System")
-window.iconbitmap("puplogo.ico")
+window.iconbitmap(icon_path)
 window.geometry("1200x800")
 
 # FRAMES
@@ -47,7 +51,7 @@ def put_img(parent, img, x, y):
     lbl.image = img
     lbl.place(x=x, y=y)
 
-# BACKGROUND
+# BACKGROUND    
 pup = Image.open("pupbg.ico").convert("RGBA").resize((800, 800))
 alpha = pup.getchannel("A").point(lambda p: int(p * 0.20))
 pup.putalpha(alpha)
@@ -299,5 +303,8 @@ def signup_screen():
     add_footer()
 
 # START 
+main_home_window = window
 login_screen()
 window.mainloop()
+
+

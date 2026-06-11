@@ -1,7 +1,12 @@
+import sys
 import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from tkinter import *
 from tkinter import filedialog, Toplevel, messagebox
 from course_management import course as course
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 icon_path = os.path.join(BASE_DIR, "puplogo.ico")
