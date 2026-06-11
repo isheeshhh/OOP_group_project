@@ -3,9 +3,9 @@ from tkinter import *
 from tkinter import filedialog, Toplevel, messagebox
 from course_management import course as course
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 icon_path = os.path.join(BASE_DIR, "puplogo.ico")
+
 # WINDOW
 root = Tk()
 root.title("Learning Management System Dashboard")
