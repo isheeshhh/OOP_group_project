@@ -148,16 +148,16 @@ content_frame.pack(
 )
 
 # MANAGE COURSES POPUP
-def open_manage_courses():
+def open_add_course():
 
     popup = Toplevel()
-    popup.title("Manage Courses")
+    popup.title("Add Course")
     popup.geometry("650x700")
     popup.configure(bg="white")
 
     Label(
         popup,
-        text="Manage Courses",
+        text="Add Course",
         font=("Poppins", 18, "bold"),
         bg="white"
     ).pack(pady=15)
@@ -205,40 +205,6 @@ def open_manage_courses():
         expand=True,
         padx=20
     )
-
-    file_data = {"path": None}
-
-    def upload_pdf():
-        path = filedialog.askopenfilename(
-            filetypes=[("PDF files", "*.pdf")]
-        )
-
-        if path:
-            file_data["path"] = path
-            upload_label.config(
-                text=path.split("/")[-1]
-            )
-
-    Label(
-        popup,
-        text="Course Material (PDF)",
-        bg="white",
-        font=("Poppins", 10)
-    ).pack(anchor="w", padx=20, pady=(15, 5))
-
-    Button(
-        popup,
-        text="Click to Upload PDF",
-        command=upload_pdf
-    ).pack(pady=5)
-
-    upload_label = Label(
-        popup,
-        text="No file selected",
-        fg="gray",
-        bg="white"
-    )
-    upload_label.pack()
 
     def save_course():
         name = ent_name.get().strip()
@@ -333,7 +299,7 @@ def open_edit_course(course_item):
 
         try:
             
-            all_courses = course.load_courses()
+            all_courses = course.load_data(course.COURSES_DATABASE)
             
             if new_name != original_name:
                 for c in all_courses:
@@ -346,7 +312,7 @@ def open_edit_course(course_item):
                     c["course_name"] = new_name          
                     c["course_description"] = new_desc   
             
-            course.save_courses(all_courses)
+            course.save_data(course.COURSES_DATABASE, all_courses)
             
             messagebox.showinfo("Success", "Course changes successfully saved!", parent=popup)
             popup.destroy()
@@ -423,7 +389,7 @@ def show_dashboard():
         ).pack(anchor="w", padx=20, pady=(10, 0))
 
     try:
-        total_courses = len(course.load_courses())
+        total_courses = len(course.load_data(course.COURSES_DATABASE))
     except Exception:
         total_courses = 0
 
@@ -464,6 +430,128 @@ def show_dashboard():
     # MANAGING FILES POPUP
     def open_manage_files():
 
+        def upload_files():                      
+            
+            upload_file_popup = Toplevel()
+            upload_file_popup.title("Upload File")
+            upload_file_popup.geometry("400x200")
+            upload_file_popup.configure(bg="white")
+
+            row_frame = Frame(
+                upload_file_popup, 
+                bg="white"
+                )
+            
+            row_frame.pack(
+                pady=(25, 10), 
+                padx=20, 
+                anchor="w"
+                )
+
+            course_name_label = Label(
+                row_frame,
+                text="Target Course ID:",
+                font=("Arial", 11),
+                bg="white"
+            )
+            course_name_label.pack(side="left", padx=(0, 5))
+
+            course_name_entry = Entry(
+                row_frame,
+                font=("Arial", 11),
+                width=25,
+                relief="sunken"
+            )
+            course_name_entry.pack(side="left")
+
+            def upload_file():  
+                target_course_name = course_name_entry.get().strip()
+                if not target_course_name:
+                    messagebox.showerror("Error", "Please enter course name.")
+                    return
+                
+                file = filedialog.askopenfilename(filetypes=[("All Files", "*.*")])
+                if file:
+                    try:
+                        course.add_file_to_course(target_course_name, file)
+                        messagebox.showinfo("Success", "File uploaded successfully.")
+                        upload_file_popup.destroy()
+                        display_files()
+                    except ValueError as e:
+                        messagebox.showerror("Error", str(e))
+                
+            upload_file_btn = Button(
+                upload_file_popup,
+                text="Choose & Upload PDF",
+                font=("Arial", 10),
+                bg="#e1e1e1",  
+                relief="raised",
+                bd=2,
+                padx=10,
+                pady=3,
+                command=upload_file
+            )
+            
+            upload_file_btn.pack(
+                pady=10, 
+                padx=(125, 0), 
+                anchor="w")
+            
+        def display_files():
+            for widget in file_list.winfo_children():
+                widget.destroy()
+
+            try:
+                all_courses = course.load_data(course.COURSES_DATABASE)
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+                return
+
+            file_entries = []
+            for course_item in all_courses:
+                for file_name in course_item.get("course_files", []):
+                    file_entries.append((course_item['course_name'], file_name))
+
+            if not file_entries:
+                Label(
+                    file_list,
+                    text="No files uploaded yet.",
+                    bg="white",
+                    fg="gray"
+                ).pack(anchor="w")
+                return
+
+            for course_name, file_name in file_entries:
+                file_row = Frame(file_list, bg="white")
+                file_row.pack(fill='x', pady=2)
+
+                display_file = f"{course_name} - {file_name}"
+
+                Label(
+                    file_row,
+                    text=display_file,
+                    bg="white",
+                    anchor="w"
+                ).pack(side="left", fill="x", expand=True, pady=2)
+
+                def delete_files(target_course=course_name, target_file=file_name):
+                    confirm = messagebox.askyesno("Confirm Delete File", f"Are you sure you want to delete '{target_file}' from '{target_course}'?")
+
+                    if confirm:
+                        try:
+                            course.delete_file_in_course(target_course,  target_file)
+                            messagebox.showinfo("Success", "File deleted successfully.")
+                            display_files()
+                        except ValueError as e:
+                            messagebox.showerror("Error", str(e))
+
+                Button(
+                    file_row,
+                    text="Delete",
+                    fg="red",
+                    command=delete_files
+                    ).pack(side="right", padx=5)
+
         popup = Toplevel()
         popup.title("Managing Files")
         popup.geometry("500x350")
@@ -482,33 +570,33 @@ def show_dashboard():
             bg="#7b1d2e",
             fg="white",
             relief="flat",
-            font=("Poppins", 10, "bold")
+            font=("Poppins", 10, "bold"),
+            command=upload_files
         ).pack(
             fill="x",
             padx=30,
             pady=10,
             ipady=10
         )
-
-        Button(
+        
+        file_list = LabelFrame(
             popup,
-            text="✏️ Edit File",
-            bg="#d9d9d9",
-            relief="flat",
-            font=("Poppins", 10)
-        ).pack(
-            fill="x",
+            text="Uploaded Files",
+            padx=10, 
+            pady=5,
+            bg="white"
+
+        )
+        file_list.pack(
+            fill='x',
             padx=30,
-            pady=10,
-            ipady=10
+            pady=5,
+            ipady=30
         )
 
-        Button(
-            popup,
-            text="Close",
-            command=popup.destroy
-        ).pack(pady=20)
+        display_files()   
 
+       
     # QUICK CARD
     def quick_card(parent, col, icon, title, desc, command=None):
 
@@ -689,12 +777,12 @@ def show_courses():
 
         if confirm:
             try:
-                all_courses = course.load_courses()
+                all_courses = course.load_data(course.COURSES_DATABASE)
                 updated_course = [] 
                 for c in all_courses:
                     if c['course_name'] != course_name:
                         updated_course.append(c)
-                course.save_courses(updated_course)
+                course.save_data(course.COURSES_DATABASE, updated_course)
                 messagebox.showinfo("Succes", f"'{course_name}' has been deleted.")
                 show_courses()
             except Exception as e:
@@ -752,11 +840,11 @@ def show_courses():
         fg="white",
         relief="flat",
         font=("Poppins", 10, "bold"),
-        command=open_manage_courses
+        command=open_add_course
     ).pack(side="right", fill="x", padx=5, ipady=8)
 
     try:
-        all_courses = course.load_courses()
+        all_courses = course.load_data(course.COURSES_DATABASE)
         for course_item in all_courses:
             create_course_card(
                 main_content,
@@ -826,6 +914,7 @@ Button(
 )
 
 # START PAGE
+course.init_directory()
 show_dashboard()
 
 root.mainloop()
