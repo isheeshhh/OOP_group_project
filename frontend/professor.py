@@ -261,82 +261,6 @@ def open_add_course():
         ipady=10
     )
 
-def open_edit_course(course_item):
-
-    original_name = course_item["course_name"]
-
-    popup = Toplevel()
-    popup.title("Edit Course")
-    popup.geometry("650x700")
-    popup.configure(bg="white")
-
-    Label(
-        popup,
-        text="Edit Course",
-        font=("Poppins", 18, "bold"),
-        bg="white"
-    ).pack(pady=15)
-
-    Label(popup, text="Course Name", bg="white", font=("Poppins", 10)).pack(anchor="w", padx=20, pady=(20, 5))
-    ent_name = Entry(popup, font=("Poppins", 11))
-    ent_name.pack(fill="x", padx=20, ipady=8)
-    
-    ent_name.insert(0, original_name)  
-
-    Label(popup, text="Course Description", bg="white", font=("Poppins", 10)).pack(anchor="w", padx=20, pady=(15, 5))
-    ent_desc = Text(popup, height=8, font=("Poppins", 11))
-    ent_desc.pack(fill="both", expand=True, padx=20)
-    
-    ent_desc.insert("1.0", course_item["course_description"])
-
-    def save_changes():
-        new_name = ent_name.get().strip()
-        new_desc = ent_desc.get("1.0", END).strip()
-
-        if not new_name:
-            messagebox.showerror("Validation Error", "Course Name must not be left blank.", parent=popup)
-            return
-
-        try:
-            
-            all_courses = course.load_data(course.COURSES_DATABASE)
-            
-            if new_name != original_name:
-                for c in all_courses:
-                    if c["course_name"] == new_name:
-                        messagebox.showerror("Validation Error", f"Course: {new_name} already exists.", parent=popup)
-                        return
-
-            for c in all_courses:
-                if c["course_name"] == original_name:
-                    c["course_name"] = new_name          
-                    c["course_description"] = new_desc   
-            
-            course.save_data(course.COURSES_DATABASE, all_courses)
-            
-            messagebox.showinfo("Success", "Course changes successfully saved!", parent=popup)
-            popup.destroy()
-            
-            show_courses()
-            
-        except Exception as e:
-            messagebox.showerror("Database Error", f"An unexpected error occurred: {e}", parent=popup)
-
-    button_frame = Frame(popup, bg="white")
-    button_frame.pack(fill="x", padx=20, pady=20)
-
-    Button(
-        button_frame, text="Cancel", command=popup.destroy,
-        bg="#d9d9d9", relief="flat", font=("Poppins", 10)
-    ).pack(side="left", ipadx=20, ipady=10)
-
-    Button(
-        button_frame, 
-        text="SAVE CHANGES",
-        bg="#7b1d2e", fg="white", relief="flat",
-        font=("Poppins", 10, "bold"), command=save_changes
-    ).pack(side="left", fill="x", expand=True, padx=(10, 0), ipady=10)
-
 # DASHBOARD PAGE
 def show_dashboard():
     clear_content()
@@ -786,7 +710,84 @@ def show_courses():
                 messagebox.showinfo("Succes", f"'{course_name}' has been deleted.")
                 show_courses()
             except Exception as e:
-                messagebox.showerror("Error", f"Couldn't delete course: {e}")   
+                messagebox.showerror("Error", f"Couldn't delete course: {e}")  
+                
+    def open_edit_course(course_item):
+
+        original_name = course_item["course_name"]
+
+        popup = Toplevel()
+        popup.title("Edit Course")
+        popup.geometry("650x700")
+        popup.configure(bg="white")
+
+        Label(
+            popup,
+            text="Edit Course",
+            font=("Poppins", 18, "bold"),
+            bg="white"
+        ).pack(pady=15)
+
+        Label(popup, text="Course Name", bg="white", font=("Poppins", 10)).pack(anchor="w", padx=20, pady=(20, 5))
+        ent_name = Entry(popup, font=("Poppins", 11))
+        ent_name.pack(fill="x", padx=20, ipady=8)
+        
+        ent_name.insert(0, original_name)  
+
+        Label(popup, text="Course Description", bg="white", font=("Poppins", 10)).pack(anchor="w", padx=20, pady=(15, 5))
+        ent_desc = Text(popup, height=8, font=("Poppins", 11))
+        ent_desc.pack(fill="both", expand=True, padx=20)
+        
+        ent_desc.insert("1.0", course_item["course_description"])
+
+        def save_changes():
+            new_name = ent_name.get().strip()
+            new_desc = ent_desc.get("1.0", END).strip()
+
+            if not new_name:
+                messagebox.showerror("Validation Error", "Course Name must not be left blank.", parent=popup)
+                return
+
+            try:
+                
+                all_courses = course.load_data(course.COURSES_DATABASE)
+                
+                if new_name != original_name:
+                    for c in all_courses:
+                        if c["course_name"] == new_name:
+                            messagebox.showerror("Validation Error", f"Course: {new_name} already exists.", parent=popup)
+                            return
+
+                for c in all_courses:
+                    if c["course_name"] == original_name:
+                        c["course_name"] = new_name          
+                        c["course_description"] = new_desc   
+                
+                course.save_data(course.COURSES_DATABASE, all_courses)
+                
+                messagebox.showinfo("Success", "Course changes successfully saved!", parent=popup)
+                popup.destroy()
+                
+                show_courses()
+                
+            except Exception as e:
+                messagebox.showerror("Database Error", f"An unexpected error occurred: {e}", parent=popup)
+
+        button_frame = Frame(popup, bg="white")
+        button_frame.pack(fill="x", padx=20, pady=20)
+
+        Button(
+            button_frame, text="Cancel", command=popup.destroy,
+            bg="#d9d9d9", relief="flat", font=("Poppins", 10)
+        ).pack(side="left", ipadx=20, ipady=10)
+
+        Button(
+            button_frame, 
+            text="SAVE CHANGES",
+            bg="#7b1d2e", fg="white", relief="flat",
+            font=("Poppins", 10, "bold"), command=save_changes
+        ).pack(side="left", fill="x", expand=True, padx=(10, 0), ipady=10)
+ 
     
     main_content = Frame(
         content_frame,
