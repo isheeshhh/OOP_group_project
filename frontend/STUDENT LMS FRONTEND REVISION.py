@@ -227,6 +227,14 @@ for text, page in menu_items:
         padx=30
     ).pack(anchor="w", pady=2, padx=20)
 
+def logout():
+    confirm = messagebox.askyesno(
+        "Logout", 
+        "Are you sure you want to logout?")
+    if confirm:
+        root.destroy()
+        import homepage    
+
 logout_btn = Button(
     sidebar,
     text="[→   Logout",
@@ -238,7 +246,8 @@ logout_btn = Button(
     width=60,
     height=2,
     anchor="w",
-    padx=30
+    padx=30,
+    command=logout
 )
 
 logout_btn.pack(anchor="w", pady=(10, 0), padx=20)
