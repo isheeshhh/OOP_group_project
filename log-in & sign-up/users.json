@@ -1,0 +1,17 @@
+{
+    "users": [
+        {
+            "fullname": "Kiv Cruz",
+            "username": "kvzcrz",
+            "password": "testingpassword",
+            "role": "student"
+        },
+        {
+            "fullname": "Kiv cruz",
+            "email": "zurckiv09@gmail.com",
+            "username": "zurckiv09@gmail.com",
+            "password": "testingpasswordchange",
+            "role": "professor"
+        }
+    ]
+}
