@@ -3,6 +3,7 @@ import subprocess
 import sys
 from tkinter import *
 from tkinter import filedialog, Toplevel, messagebox
+import database_for_courses as courses
 
 # Store the script directory path used for asset resolution.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -10,6 +11,9 @@ ASSET_DIR = os.path.join(SCRIPT_DIR, "assets")
 
 def asset(name):
     return os.path.join(ASSET_DIR, name)
+
+courses.init_database()
+courses.init_directory()
 
 # Hardcoded professor name and ID used in place of session data.
 prof_name = "Prof. Professor"
@@ -168,14 +172,13 @@ def open_manage_courses(edit_idx=None):
     course_desc = Text(popup, height=8, font=("Inter", 11), bg="#FAF9F6", relief="flat")
     course_desc.pack(fill="both", expand=True, padx=20)
 
-    file_data = {"path": None}
-
     # Placeholder student list used in place of loading from accounts file.
     student_accounts = []
 
     Label(popup, text="Included Students", bg="white", font=("Inter", 10)).pack(anchor="w", padx=20, pady=(15, 5))
     student_listbox = Listbox(popup, selectmode=MULTIPLE, height=5, font=("Inter", 10), bg="#FAF9F6", relief="flat")
     student_listbox.pack(fill="x", padx=20)
+
     if student_accounts:
         for student in student_accounts:
             student_listbox.insert(END, student.get("fullname", "Student"))
@@ -183,32 +186,32 @@ def open_manage_courses(edit_idx=None):
         student_listbox.insert(END, "No registered student accounts yet")
         student_listbox.config(state=DISABLED)
 
+    courses_db = courses.load_data()
+
     # Pre-fill fields if editing an existing course.
     if is_edit:
-        c_data = courses[edit_idx]
-        course_name.insert(0, c_data["title"])
-        course_desc.insert("1.0", c_data["description"])
-        if c_data.get("file_path"):
-            file_data["path"] = c_data["file_path"]
+        c_data = courses_db[edit_idx]
+        course_name.insert(0, c_data["course_name"])
+        course_desc.insert("1.0", c_data["course_description"])
 
-    def upload_pdf():
-        path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
-        if path:
-            file_data["path"] = path
-            upload_label.config(text=os.path.basename(path))
+    # def upload_pdf():
+    #     path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+    #     if path:
+    #         file_data["path"] = path
+    #         upload_label.config(text=os.path.basename(path))
 
-    Label(popup, text="Course Material (PDF)", bg="white", font=("Inter", 10)).pack(anchor="w", padx=20, pady=(15, 5))
-    Button(popup, text="Click to Upload PDF", bg="#FAF9F6", relief="flat", font=("Inter", 10), command=upload_pdf).pack(pady=5)
+    # Label(popup, text="Course Material (PDF)", bg="white", font=("Inter", 10)).pack(anchor="w", padx=20, pady=(15, 5))
+    # Button(popup, text="Click to Upload PDF", bg="#FAF9F6", relief="flat", font=("Inter", 10), command=upload_pdf).pack(pady=5)
 
-    display_file = os.path.basename(file_data["path"]) if file_data["path"] else "No file selected"
-    upload_label = Label(popup, text=display_file, fg="gray", bg="white")
-    upload_label.pack()
+    # display_file = os.path.basename(file_data["path"]) if file_data["path"] else "No file selected"
+    # upload_label = Label(popup, text=display_file, fg="gray", bg="white")
+    # upload_label.pack()
 
     def save_course():
-        title = course_name.get().strip()
+        name = course_name.get().strip()
         desc = course_desc.get("1.0", END).strip()
-        f_path = file_data["path"]
-        f_name = os.path.basename(f_path) if f_path else "No file attached"
+        # f_path = file_data["path"]
+        # f_name = os.path.basename(f_path) if f_path else "No file attached"
 
         if not title:
             messagebox.showwarning("Validation Error", "Course Name is required.", parent=popup)
