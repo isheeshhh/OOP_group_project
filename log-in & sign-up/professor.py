@@ -230,7 +230,7 @@ def open_manage_courses(edit_idx=None):
                     return
                 
             course_db[edit_idx]["course_name"] = name
-            course_db[edit_idx]["course_desc"] = desc
+            course_db[edit_idx]["course_description"] = desc
         else:
             # Add a new course entry to the database.
             for c in course_db:

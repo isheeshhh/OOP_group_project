@@ -1,7 +1,7 @@
 [
     {
-        "course_name": "PROGRAMMING",
-        "course_description": "",
+        "course_name": "OOP",
+        "course_description": "asdasd",
         "course_instructor": "Irish De Guzman",
         "course_files": [
             "CMPE-103-Module-1-Python-Strings-Manipulation.pdf",
