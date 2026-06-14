@@ -59,7 +59,7 @@ class MemberCard(tk.Frame):
         # Assigned Task Display Panel Group
         tk.Label(info_panel, text="ASSIGNED TASK", font=("Inter Black", 10, "bold"), 
                  fg="#FFFFFF", bg="#7A151A", anchor="w").place(x=15, y=154, width=280)
-        role_box = tk.Label(info_panel, text=self.role, font=("Inter Medium", 11, "bold"), 
+        role_box = tk.Label(info_panel, text=self.role, font=("Inter Medium", 8, "bold"), 
                             fg="#7A151A", bg="#FFD000", bd=0, anchor="center")
         role_box.place(x=15, y=176, width=280, height=35)
 
@@ -125,15 +125,16 @@ class PortfolioApp:
         # group Team Dictionary List Setup
         self.members_data = {
             "AEROLD AFABLE": {"role": "DOCUMENTATION", "photo": "aerold.jpg"},
-            "CHRISTIAN BERGOLA": {"role": "UI DESIGNER", "photo": "christian.jpg"}, 
-            "EUNICE BLANCO": {"role": "LEADER, FRONTEND DEVELOPER", "photo": "eunice.jpg"},
-            "ANGEL ZAINA CUASAY": {"role": "UI DESIGNER", "photo": "zaina.jpg"},
-            "IRISH DE GUZMAN": {"role": " BACKEND DEVELOPER", "photo": "irish.jpg"},
-            "LIRAH MOLLEDA": {"role": "DOCUMENTATION ", "photo": "lirah.jpg"},
-            "JANA MIKAELA SAET": {"role": "FRONTEND DEVELOPER", "photo": "jana.jpg"},
+            "CHRISTIAN BERGOLA": {"role": "UI DESIGNER, DOCUMENTATION", "photo": "christian.jpg"}, 
+            "EUNICE BLANCO": {"role": "LEADER, FRONTEND DEVELOPER, DOCUMENTATION", "photo": "eunice.jpg"},
+            "ANGEL ZAINA CUASAY": {"role": "UI DESIGNER, DOCUMENTATION", "photo": "zaina.jpg"},
+            "KIV ZEIMER CRUZ": {"role": "BACKEND DEVELOPER, DOCUMENTATION", "photo": "kiv.jpg"},
+            "IRISH DE GUZMAN": {"role": " BACKEND DEVELOPER, DOCUMENTATION", "photo": "irish.jpg"},
+            "LIRAH MOLLEDA": {"role": "DOCUMENTATION", "photo": "lirah.jpg"},
+            "JANA MIKAELA SAET": {"role": "FRONTEND DEVELOPER, DOCUMENTATION", "photo": "jana.jpg"},
             "ANNA SHARLENE TORIO": {"role": "DOCUMENTATION", "photo": "anna.jpg"},
-            "YAEL TORREGOZA": {"role": "DOCUMENTATION", "photo": "yael.jpg"},
-            "KIV ZEIMER CRUZ": {"role": "BACKEND DEVELOPER", "photo": "kiv.jpg"}
+            "YAEL TORREGOZA": {"role": "DOCUMENTATION", "photo": "yael.jpg"}
+            
         }
         
         self.current_display = None
