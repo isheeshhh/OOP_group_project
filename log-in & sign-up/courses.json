@@ -1,0 +1,13 @@
+[
+    {
+        "course_name": "PROGRAMMING",
+        "course_description": "",
+        "course_instructor": "Irish De Guzman",
+        "course_files": [
+            "CMPE-103-Module-1-Python-Strings-Manipulation.pdf",
+            "CMPE-103-Module-4-Introduction-to-Object-oriented-Programming_2025_1_7_async.pdf",
+            "CMPE-103-Modules-and-Packages.pdf"
+        ],
+        "course_desc": ""
+    }
+]
