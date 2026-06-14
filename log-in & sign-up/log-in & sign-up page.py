@@ -6,6 +6,7 @@ import smtplib
 import ssl
 import subprocess
 import sys
+import profile_page
 from email.message import EmailMessage
 from tkinter import *
 from tkinter import messagebox
@@ -172,6 +173,24 @@ def feature(icon, title, desc, y):
 feature("access.ico", "ACCESS QUALITY COURSES", "Explore thousands of courses", 430)
 feature("track.ico", "TRACK YOUR PROGRESS", "Monitor learning achievements", 500)
 feature("engage.ico", "ENGAGE & COLLABORATE", "Connect with peers and instructors", 570)
+
+
+btn_profiles = Button(
+    left_frame, 
+    text="GO TO PROFILES", 
+    font=("Courier", 12, "bold"),   
+    bg="#ffea00",                    
+    fg="black",                      
+    bd=5,                            
+    relief="raised",                 
+    highlightbackground="black",     
+    highlightthickness=2,
+    activebackground="#e5d200",      
+    cursor="hand2",
+    command=profile_page.open_portfolio_window                  
+)
+btn_profiles.place(x=60, y=660, width=200, height=45)
+
 
 # Container where login, signup, and reset-password forms are displayed.
 inner = Frame(right_frame, bg="white", width=400, height=600)
