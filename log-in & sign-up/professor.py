@@ -1,4 +1,5 @@
-﻿import os
+﻿import json
+import os
 import subprocess
 import sys
 from tkinter import *
@@ -16,11 +17,33 @@ courses.init_database()
 courses.init_directory()
 
 # Hardcoded professor name and ID used in place of session data.
-prof_name = "Prof. Professor"
+prof_name = "Instructor"
 professor_id = "professor"
 
+def load_logged_in_session():
+    global prof_name, professor_id
+    session_file_path = os.path.join(SCRIPT_DIR, "current_user.json")
+    
+    if os.path.exists(session_file_path):
+        try:
+            with open(session_file_path, "r", encoding="utf-8") as file:
+                user_data = json.load(file)
+                
+                prof_name = user_data.get("fullname", "Instructor")
+                professor_id = user_data.get("email", "professor")
+                
+        except Exception as e:
+            print(f"Error reading session file: {e}")
+            prof_name = "Instructor"
+            professor_id = "professor"
+    else:
+        prof_name = "Instructor"
+        professor_id = "professor"
+
+load_logged_in_session()
+
 # In-memory course list used instead of loading from a JSON database.
-courses = []
+# courses = []
 
 # WINDOW
 root = Tk()
@@ -104,13 +127,24 @@ Label(
 ).pack(anchor="w")
 
 # PROFILE
-profile = Frame(header, width=200, height=50, bg="white", highlightbackground="#D3D3D3", highlightthickness=1)
-profile.pack(side="right")
-profile.pack_propagate(False)
+
+name_parts = prof_name.strip().split()
+
+if len(name_parts) >= 2:
+    initials = (name_parts[0][0] + name_parts[1][0]).upper()
+elif len(name_parts) == 1 and len(name_parts[0]) >= 2:
+    initials = name_parts[0][:2].upper()
+else:
+    initials = prof_name[:2].upper() if prof_name else "IN"
+
+
+profile = Frame(header, bg="white", highlightbackground="#D3D3D3", highlightthickness=1)
+profile.pack(side="right", padx=10, pady=5)
+
 
 Label(
     profile,
-    text="EB",
+    text=initials,
     bg="#f7c948",
     fg="black",
     width=3,
@@ -119,7 +153,7 @@ Label(
 ).pack(side="left", padx=10, pady=10)
 
 info = Frame(profile, bg="white")
-info.pack(side="left", pady=8)
+info.pack(side="left", pady=8, padx=(0, 15))
 
 Label(
     info,
@@ -130,7 +164,7 @@ Label(
 
 Label(
     info,
-    text="Instructor",
+    text=professor_id,
     bg="white",
     fg="gray",
     font=("Inter", 9)
@@ -172,20 +206,6 @@ def open_manage_courses(edit_idx=None):
     course_desc = Text(popup, height=8, font=("Inter", 11), bg="#FAF9F6", relief="flat")
     course_desc.pack(fill="both", expand=True, padx=20)
 
-    # Placeholder student list used in place of loading from accounts file.
-    student_accounts = []
-
-    Label(popup, text="Included Students", bg="white", font=("Inter", 10)).pack(anchor="w", padx=20, pady=(15, 5))
-    student_listbox = Listbox(popup, selectmode=MULTIPLE, height=5, font=("Inter", 10), bg="#FAF9F6", relief="flat")
-    student_listbox.pack(fill="x", padx=20)
-
-    if student_accounts:
-        for student in student_accounts:
-            student_listbox.insert(END, student.get("fullname", "Student"))
-    else:
-        student_listbox.insert(END, "No registered student accounts yet")
-        student_listbox.config(state=DISABLED)
-
     courses_db = courses.load_data()
 
     # Pre-fill fields if editing an existing course.
@@ -194,48 +214,41 @@ def open_manage_courses(edit_idx=None):
         course_name.insert(0, c_data["course_name"])
         course_desc.insert("1.0", c_data["course_description"])
 
-    # def upload_pdf():
-    #     path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
-    #     if path:
-    #         file_data["path"] = path
-    #         upload_label.config(text=os.path.basename(path))
-
-    # Label(popup, text="Course Material (PDF)", bg="white", font=("Inter", 10)).pack(anchor="w", padx=20, pady=(15, 5))
-    # Button(popup, text="Click to Upload PDF", bg="#FAF9F6", relief="flat", font=("Inter", 10), command=upload_pdf).pack(pady=5)
-
-    # display_file = os.path.basename(file_data["path"]) if file_data["path"] else "No file selected"
-    # upload_label = Label(popup, text=display_file, fg="gray", bg="white")
-    # upload_label.pack()
-
     def save_course():
         name = course_name.get().strip()
         desc = course_desc.get("1.0", END).strip()
         # f_path = file_data["path"]
         # f_name = os.path.basename(f_path) if f_path else "No file attached"
 
-        if not title:
+        if not name:
             messagebox.showwarning("Validation Error", "Course Name is required.", parent=popup)
             return
 
-        if is_edit:
-            # Update existing course in the in-memory list.
-            courses[edit_idx]["title"] = title
-            courses[edit_idx]["description"] = desc
-            courses[edit_idx]["students"] = []
-            courses[edit_idx]["file_name"] = f_name
-            courses[edit_idx]["file_path"] = f_path
-        else:
-            # Add a new course entry to the in-memory list.
-            new_course = {
-                "title": title,
-                "description": desc,
-                "students": [],
-                "file_name": f_name,
-                "file_path": f_path,
-                "date": "N/A"
-            }
-            courses.append(new_course)
+        course_db = courses.load_data()
 
+        if is_edit:
+            # Update existing course in the database.
+            for i, c in enumerate(course_db):
+                if i != edit_idx and c["course_name"] == name:
+                    messagebox.showwarning("Error", f"Course {name} already exists.")
+                    return
+                
+            course_db[edit_idx]["course_name"] = name
+            course_db[edit_idx]["course_desc"] = desc
+        else:
+            # Add a new course entry to the database.
+            for c in course_db:
+                if c["course_name"] == name:
+                    messagebox.showwarning("Error", f"Course {name} already exists.")
+                    return
+            new_course = {
+                "course_name": name,
+                "course_description": desc,
+                "course_instructor": prof_name,
+                "course_files": []
+            }
+            course_db.append(new_course)
+        courses.save_data(courses.COURSES_DATABASE, course_db)
         popup.destroy()
         show_courses() # Refresh view to show changes
 
@@ -255,7 +268,10 @@ def open_manage_files():
 
     Label(popup, text="Managing Files", font=("Plus Jakarta Sans", 18, "bold"), bg="white").pack(pady=20)
 
-    if not courses:
+    all_courses = courses.load_data()
+    my_courses = [c for c in all_courses if c.get("course_instructor") == prof_name]
+
+    if not my_courses:
         Label(popup, text="Create a course first before managing files.", font=("Inter", 11), fg="gray", bg="white").pack(pady=60)
         Button(popup, text="Close", relief="flat", bg="#FAF9F6", command=popup.destroy).pack(pady=20)
         return
@@ -263,8 +279,21 @@ def open_manage_files():
     body = Frame(popup, bg="white")
     body.pack(fill="both", expand=True, padx=30)
 
-    course_list = Listbox(body, height=10, font=("Inter", 11), bg="#FAF9F6", relief="flat")
-    course_list.pack(side="left", fill="both", expand=True, padx=(0, 15))
+    #Left side: Selection
+    left_side = Frame(body, bg="white")
+    left_side.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+    Label(left_side, text="Select Course", font=("Inter", 10, "bold"), bg="white").pack(anchor="w", pady=(0,5))
+    course_list = Listbox(left_side, height=12, font=("Inter", 11), bg="#FAF9F6", relief="flat", exportselection=False)
+    course_list.pack(fill="both", expand=True)
+
+    #Middle: All files
+    mid_side = Frame(body, bg="white")
+    mid_side.pack(side="left", fill="both", expand=True, padx=10)
+    
+    Label(mid_side, text="Attached Files", font=("Inter", 10, "bold"), bg="white").pack(anchor="w", pady=(0,5))
+    file_listbox = Listbox(mid_side, height=12, font=("Inter", 11), bg="#FAF9F6", relief="flat", exportselection=False)
+    file_listbox.pack(fill="both", expand=True)
 
     detail = Frame(body, bg="white", width=260)
     detail.pack(side="right", fill="y")
@@ -272,32 +301,53 @@ def open_manage_files():
 
     selected_title = Label(detail, text="", font=("Plus Jakarta Sans", 12, "bold"), bg="white", wraplength=240, justify="left")
     selected_title.pack(anchor="w", pady=(5, 10))
-    selected_file = Label(detail, text="", font=("Inter", 10), fg="gray", bg="white", wraplength=240, justify="left")
-    selected_file.pack(anchor="w", pady=(0, 20))
+    
 
     def refresh_list():
         course_list.delete(0, END)
-        for course in courses:
-            file_name = course.get("file_name") or "No file attached"
-            course_list.insert(END, f"{course.get('title', 'Untitled Course')} - {file_name}")
-        if courses:
-            course_list.selection_set(0)
-            show_selected_file()
+        course_db = courses.load_data()
+        instructor_courses = [c for c in course_db if c.get("course_instructor") == prof_name]
+
+        for course in instructor_courses:
+            files = course.get("course_files", [])
+            count = len(files)
+            file_suffix = "file" if count == 1 else "files"
+            course_list.insert(END, f"{course.get("course_name")} ({count}{file_suffix})")
+        
 
     def get_selected_index():
         selected = course_list.curselection()
         if not selected:
             messagebox.showwarning("No Course Selected", "Please select a course first.", parent=popup)
             return None
-        return selected[0]
+        
+        local_idx = selected[0]
+        course_db = courses.load_data()
+        instructor_courses = [c for c in course_db if c.get("course_instructor") == prof_name]
+        selected_course = instructor_courses[local_idx]
 
-    def show_selected_file(_event=None):
-        index = get_selected_index()
-        if index is None:
+        for global_idx, course in enumerate(course_db):
+            if course["course_name"] == selected_course["course_name"]:
+                return global_idx
+        return None
+        
+
+    def update_file_display(_event=None):
+        file_listbox.delete(0, END)
+        selected = course_list.curselection()
+
+        if not selected:
             return
-        course = courses[index]
-        selected_title.config(text=course.get("title", "Untitled Course"))
-        selected_file.config(text="File: " + (course.get("file_name") or "No file attached"))
+        
+        course_db = courses.load_data()
+        instructor_courses = [c for c in course_db if c.get("course_instructor") == prof_name]
+        course = instructor_courses[selected[0]]
+
+        selected_title.config(text=course.get("course_name"))
+
+        files = course.get("course_files", [])
+        for f in  files:
+            file_listbox.insert(END, f)
 
     def upload_file():
         index = get_selected_index()
@@ -305,40 +355,79 @@ def open_manage_files():
             return
         path = filedialog.askopenfilename(
             title="Select Course File",
-            filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
+            filetypes=[("All files", "*.*")]
         )
         if not path:
             return
-        # Update the in-memory course entry with the new file path.
-        courses[index]["file_path"] = path
-        courses[index]["file_name"] = os.path.basename(path)
-        refresh_list()
-        course_list.selection_clear(0, END)
-        course_list.selection_set(index)
-        show_selected_file()
-        show_courses()
+        
+        course_db = courses.load_data()
+        target_course = course_db[index]["course_name"]
+        file_name = os.path.basename(path)
+
+        #Check if the file is already in the database
+        if file_name in course_db[index].get("course_files",[]):
+            messagebox.showwarning("Duplicate File", f"'{file_name} ' is already attached to this course.", parent=popup)
+
+        # Update the database course entry with the new file path.
+
+        try:
+            courses.add_file_to_course(target_course, path)
+
+            selected_pos = course_list.curselection()[0]
+            refresh_list()
+            course_list.selection_set(selected_pos)
+            update_file_display()
+            show_courses()
+        except ValueError as e:
+            messagebox.showerror("Error", str(e), parent=popup)
 
     def remove_file():
         index = get_selected_index()
         if index is None:
             return
-        # Clear the file path from the in-memory course entry.
-        courses[index]["file_path"] = None
-        courses[index]["file_name"] = "No file attached"
-        refresh_list()
-        course_list.selection_clear(0, END)
-        course_list.selection_set(index)
-        show_selected_file()
-        show_courses()
+
+        file_selected = file_listbox.curselection()
+        if not file_selected:
+            messagebox.showwarning("No File Selected", "Please select a file from the attached files list to remove.", parent=popup)
+            return
+
+        # Clear the file path from the database course entry.
+        course_db = courses.load_data()
+        target_course = course_db[index]
+        files = target_course.get("course_files", [])
+        file_to_remove = files[file_selected[0]]
+
+        if messagebox.askyesno("Confirm Removal", F"Are you sure to remove file '{file_to_remove}'?", parent=popup):
+
+            try:
+                courses.delete_file_in_course(target_course["course_name"], file_to_remove)
+                selected_pos = course_list.curselection()[0]
+                refresh_list()
+                course_list.selection_set(selected_pos)
+                update_file_display()
+                show_courses()
+            except ValueError as e:
+                messagebox.showerror("Error", str(e), parent=popup)
 
     def open_file():
         index = get_selected_index()
         if index is None:
             return
-        path = courses[index].get("file_path")
-        if not path or not os.path.exists(path):
-            messagebox.showwarning("File Not Found", "This course does not have a valid attached file.", parent=popup)
+        
+        file_selected = file_listbox.curselection()
+        if not file_selected:
+            messagebox.showwarning("No file selected", "Please select a file to open.", parent=popup)
             return
+
+        course_db = courses.load_data()
+        files = course_db[index].get("course_files", [])
+        target_file = files[file_selected[0]]
+        
+        path = os.path.join(courses.FILE_DIR, target_file)
+        if not os.path.exists(path):
+            messagebox.showwarning("File not found", "The file could not be found")
+            return
+        
         if sys.platform.startswith("win"):
             os.startfile(path)
         elif sys.platform == "darwin":
@@ -346,13 +435,17 @@ def open_manage_files():
         else:
             subprocess.Popen(["xdg-open", path])
 
-    Button(detail, text="Upload / Replace File", bg="maroon", fg="white", relief="flat", font=("Inter", 10, "bold"), command=upload_file).pack(fill="x", pady=6, ipady=8)
+    Button(detail, text="Upload File", bg="maroon", fg="white", relief="flat", font=("Inter", 10, "bold"), command=upload_file).pack(fill="x", pady=6, ipady=8)
     Button(detail, text="Open File", bg="#FAF9F6", relief="flat", font=("Inter", 10), command=open_file).pack(fill="x", pady=6, ipady=8)
     Button(detail, text="Remove File", bg="#FAF9F6", fg="red", relief="flat", font=("Inter", 10), command=remove_file).pack(fill="x", pady=6, ipady=8)
     Button(popup, text="Close", relief="flat", bg="#FAF9F6", command=popup.destroy).pack(pady=20)
 
-    course_list.bind("<<ListboxSelect>>", show_selected_file)
+    course_list.bind("<<ListboxSelect>>", update_file_display)
+
     refresh_list()
+    if my_courses:
+        course_list.selection_set(0)
+        update_file_display()
 
 
 # --- DASHBOARD PAGE ---
@@ -372,7 +465,9 @@ def show_dashboard():
         Label(card, text=title, font=("Inter", 12), fg="#696969", bg=bg_color).pack(anchor="w", padx=20)
         Label(card, text=value, font=("Plus Jakarta Sans", 28, "bold"), fg="black", bg=bg_color).pack(anchor="w", padx=20, pady=(10, 0))
 
-    dashboard_card(cards_frame, "📚", "Total Courses", str(len(courses)), "white")
+    courses_db = courses.load_data()
+    my_courses_count = sum(1 for c in courses_db if c.get("course_instructor") == prof_name)
+    dashboard_card(cards_frame, "📚", "Total Courses", str(my_courses_count), "white")
 
     # QUICK ACTIONS TITLE
     Label(
@@ -417,7 +512,7 @@ def show_dashboard():
 
 # --- COURSE MANAGEMENT PAGE ---
 
-def create_course_card(parent, idx, title, description, students, file_name, date):
+def create_course_card(parent, idx, title, description, instructor, files):
     # Creates a course card shown on the Course Management page.
     card = Frame(parent, bg="white", height=140, highlightbackground="#D3D3D3", highlightthickness=1)
     card.pack(fill="x", pady=10)
@@ -437,7 +532,13 @@ def create_course_card(parent, idx, title, description, students, file_name, dat
 
     def delete_course():
         if messagebox.askyesno("Delete Course", f"Are you sure you want to delete '{title}'?"):
-            courses.pop(idx)
+            course_db = courses.load_data()
+            target_course = course_db[idx]
+            for f in target_course.get("course_files", []):
+                courses.delete_file_in_storage(f)
+
+            course_db.pop(idx)
+            courses.save_data(courses.COURSES_DATABASE, course_db)
             show_courses() # Refresh view
 
     Button(actions, text="✎", font=("Inter", 12), bg="#FAF9F6", fg="maroon", relief="flat", width=3, cursor="hand2", command=edit_course).pack(side="left", padx=5)
@@ -450,12 +551,10 @@ def create_course_card(parent, idx, title, description, students, file_name, dat
     details = Frame(card, bg="white")
     details.pack(anchor="w", padx=25, pady=(18, 0))
 
-    Label(details, text="Enrolled:", font=("Inter", 11), fg="gray", bg="white").pack(side="left")
-    student_count = len(students) if isinstance(students, list) else int(students or 0)
-    Label(details, text=f" {student_count} students", font=("Inter", 11, "bold"), bg="white").pack(side="left")
-    Label(details, text=f"    📄 {file_name}", font=("Inter", 11), fg="gray", bg="white").pack(side="left")
-    Label(details, text=f"    Created: {date}", font=("Inter", 11), fg="#444", bg="white").pack(side="left")
-
+    file_label = files[0] if files else "No file attached"
+    Label(details, text=f"📄 {file_label}", font=("Inter", 11), fg="gray", bg="white").pack(side="left", padx=(0, 20))
+    Label(details, text=f"👤 Instructor: {instructor}", font=("Inter", 11, "italic"), fg="maroon", bg="white").pack(side="left")
+    
 def show_courses():
     clear_content()
 
@@ -474,19 +573,21 @@ def show_courses():
     # Right align an "Add Course" button at the top of the course list.
     Button(page_header, text="➕ Add Course", bg="maroon", fg="white", font=("Inter", 10, "bold"), relief="flat", padx=15, pady=8, cursor="hand2", command=lambda: open_manage_courses()).pack(side="right")
 
+    courses_db = courses.load_data()
+    my_courses = [(idx, c) for idx, c in enumerate(courses_db) if c.get("course_instructor") == prof_name]
+
     # Render courses dynamically.
-    if not courses:
+    if not my_courses:
         Label(main_content, text="No courses available. Click 'Add Course' to create one.", font=("Inter", 12), fg="gray", bg="#fdece6").pack(pady=50)
     else:
-        for idx, course in enumerate(courses):
+        for idx, course in my_courses:
             create_course_card(
                 parent=main_content,
                 idx=idx,
-                title=course.get("title", "Untitled Course"),
-                description=course.get("description", ""),
-                students=course.get("students", []),
-                file_name=course.get("file_name", "No file attached"),
-                date=course.get("date", "")
+                title=course.get("course_name", "Untitled Course"),
+                description=course.get("course_description", ""),
+                instructor=course.get("course_instructor", "Unknown"),
+                files=course.get("course_files", [])
             )
 
 # SIDEBAR BUTTONS
@@ -516,6 +617,13 @@ for text, cmd in menu_items:
 def logout():
     confirm = messagebox.askyesno("Logout", "Are you sure you want to logout?")
     if confirm:
+        session_file_path = os.path.join(SCRIPT_DIR, "current_user.json")
+        try:
+            # Clear out the JSON file by writing an empty dictionary
+            with open(session_file_path, "w", encoding="utf-8") as file:
+                json.dump({}, file, indent=4)
+        except Exception as e:
+            print(f"Error clearing session file: {e}")
         root.destroy() # Closes the application
 
 Button(

@@ -16,30 +16,13 @@ def init_directory():
     if not os.path.exists(FILE_DIR):
         os.makedirs(FILE_DIR)
 
-def load_data(filepath):
+def load_data(filepath=COURSES_DATABASE):
     with open(filepath, "r") as f:
         return json.load(f)
 
 def save_data(filepath, data):
     with open(filepath, "w") as f:
         return json.dump(data, f, indent=4)
-
-def create_course(course_name, course_description):
-    if not course_name.strip():
-        raise ValueError("Course Name must not be left blank.")
-    
-    courses = load_data(COURSES_DATABASE)
-    for c in courses:
-        if c['course_name'] == course_name.strip():
-            raise ValueError(f"Course: {course_name} already exists.")
-            
-    new_course = {
-        "course_name" : course_name.strip(),
-        "course_description" : course_description.strip(),
-        "course_files" : [] 
-    }
-    courses.append(new_course)
-    save_data(COURSES_DATABASE, courses)
 
 def add_file_to_storage(local_path):
     init_directory()
@@ -59,13 +42,11 @@ def delete_file_in_storage(local_path):
 
 def add_file_to_course(course, local_file_path):
     target_course = course.strip()
-
-    courses = load_data(COURSES_DATABASE)
+    course_list = load_data(COURSES_DATABASE)
     course_found = False
-
     new_file = os.path.basename(local_file_path)
 
-    for c in courses:
+    for c in course_list:
         if c['course_name'] == target_course:
             for existing_file in c['course_files']:
                 if os.path.basename(existing_file) == new_file:
@@ -79,7 +60,7 @@ def add_file_to_course(course, local_file_path):
     if not course_found:
         raise ValueError (f"Course '{target_course}' does not exist. ")
     
-    save_data(COURSES_DATABASE, courses)
+    save_data(COURSES_DATABASE, course_list)
 
 def delete_file_in_course(course, local_file_path):
     target_course = course.strip()

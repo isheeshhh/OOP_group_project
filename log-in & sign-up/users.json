@@ -12,6 +12,13 @@
             "username": "zurckiv09@gmail.com",
             "password": "testingpasswordchange",
             "role": "professor"
+        },
+        {
+            "fullname": "Irish De Guzman",
+            "email": "irishdeguzman.acads@gmail.com",
+            "username": "irishdeguzman.acads@gmail.com",
+            "password": "hello",
+            "role": "professor"
         }
     ]
 }
