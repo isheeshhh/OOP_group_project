@@ -42,8 +42,6 @@ def load_logged_in_session():
 
 load_logged_in_session()
 
-# In-memory course list used instead of loading from a JSON database.
-# courses = []
 
 # WINDOW
 root = Tk()
@@ -217,8 +215,6 @@ def open_manage_courses(edit_idx=None):
     def save_course():
         name = course_name.get().strip()
         desc = course_desc.get("1.0", END).strip()
-        # f_path = file_data["path"]
-        # f_name = os.path.basename(f_path) if f_path else "No file attached"
 
         if not name:
             messagebox.showwarning("Validation Error", "Course Name is required.", parent=popup)
