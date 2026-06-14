@@ -115,6 +115,7 @@ class PortfolioApp:
     def __init__(self, root):
         self.root = root
         self.root.title("LMS Group Portfolio")
+        self.root.iconbitmap(asset("puplogo.ico"))
         
         self.root.geometry("590x460")
         self.root.configure(bg="#FDF1ED")
